@@ -25,33 +25,43 @@ app.get("/", function (req, res) {
   res.send("App loaded.");
 });
 
-app.get("/articles", function (req, res) {
-  Article.find({}, function (err, foundArticles) {
-    if (!err) {
-      res.send(foundArticles);
-    } else {
-      res.send(err);
-    }
+app
+  .route("/articles")
+  .get(function (req, res) {
+    Article.find({}, function (err, foundArticles) {
+      if (!err) {
+        res.send(foundArticles);
+      } else {
+        res.send(err);
+      }
+    });
+  })
+  .post(function (req, res) {
+    console.log(req.body.title);
+    console.log(req.body.content);
+
+    const wikiTitle = _.lowerCase(req.body.title);
+    const wikiContent = req.body.content;
+
+    const newWiki = new Article({ title: wikiTitle, content: wikiContent });
+
+    newWiki.save(function (err) {
+      if (!err) {
+        res.send("Successfully added a new wiki article.");
+      } else {
+        res.send(err);
+      }
+    });
+  })
+  .delete(function (req, res) {
+    Article.deleteMany({}, function (err) {
+      if (!err) {
+        res.send("Successfully deleted all wiki articles.");
+      } else {
+        res.send(err);
+      }
+    });
   });
-});
-
-app.post("/articles", function (req, res) {
-  console.log(req.body.title);
-  console.log(req.body.content);
-
-  const wikiTitle = _.lowerCase(req.body.title);
-  const wikiContent = req.body.content;
-
-  const newWiki = new Article({ title: wikiTitle, content: wikiContent });
-  
-  newWiki.save(function (err) {
-    if (!err) {
-      res.send("Successfully added a new wiki article."); 
-    } else {
-      res.send(err); 
-    }
-  });
-});
 
 app.listen(3000, function () {
   console.log("Server running on port 3000.");

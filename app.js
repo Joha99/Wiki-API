@@ -25,6 +25,7 @@ app.get("/", function (req, res) {
   res.send("App loaded.");
 });
 
+// requests targeting all articles
 app
   .route("/articles")
   .get(function (req, res) {
@@ -39,12 +40,10 @@ app
   .post(function (req, res) {
     console.log(req.body.title);
     console.log(req.body.content);
-
-    const wikiTitle = _.lowerCase(req.body.title);
+    // const wikiTitle = _.lowerCase(req.body.title);
+    const wikiTitle = req.body.title;
     const wikiContent = req.body.content;
-
     const newWiki = new Article({ title: wikiTitle, content: wikiContent });
-
     newWiki.save(function (err) {
       if (!err) {
         res.send("Successfully added a new wiki article.");
@@ -62,6 +61,22 @@ app
       }
     });
   });
+
+// requests targeting a specific article
+app.route("/articles/:articleTitle").get(function (req, res) {
+  const requestedArticleTitle = req.params.articleTitle;
+  console.log(requestedArticleTitle);
+  Article.findOne({ title: requestedArticleTitle }, function (
+    err,
+    foundArticle
+  ) {
+    if (!err) {
+      res.send(foundArticle);
+    } else {
+      res.send(err);
+    }
+  });
+});
 
 app.listen(3000, function () {
   console.log("Server running on port 3000.");

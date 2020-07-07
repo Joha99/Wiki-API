@@ -25,7 +25,7 @@ app.get("/", function (req, res) {
   res.send("App loaded.");
 });
 
-// requests targeting all articles
+//////////////////////////////////////// requests targeting all articles ////////////////////////////////////////
 app
   .route("/articles")
   .get(function (req, res) {
@@ -38,13 +38,13 @@ app
     });
   })
   .post(function (req, res) {
-    console.log(req.body.title);
-    console.log(req.body.content);
-    // const wikiTitle = _.lowerCase(req.body.title);
-    const wikiTitle = req.body.title;
-    const wikiContent = req.body.content;
-    const newWiki = new Article({ title: wikiTitle, content: wikiContent });
-    newWiki.save(function (err) {
+    const articleTitle = req.body.title;
+    const articleContent = req.body.content;
+    const newArticle = new Article({
+      title: articleTitle,
+      content: articleContent,
+    });
+    newArticle.save(function (err) {
       if (!err) {
         res.send("Successfully added a new wiki article.");
       } else {
@@ -62,21 +62,64 @@ app
     });
   });
 
-// requests targeting a specific article
-app.route("/articles/:articleTitle").get(function (req, res) {
-  const requestedArticleTitle = req.params.articleTitle;
-  console.log(requestedArticleTitle);
-  Article.findOne({ title: requestedArticleTitle }, function (
-    err,
-    foundArticle
-  ) {
-    if (!err) {
-      res.send(foundArticle);
-    } else {
-      res.send(err);
-    }
+//////////////////////////////////////// requests targeting a specific article ////////////////////////////////////////
+app
+  .route("/articles/:articleTitle")
+  .get(function (req, res) {
+    Article.findOne({ title: req.params.articleTitle }, function (
+      err,
+      foundArticle
+    ) {
+      if (!err && foundArticle) {
+        res.send(foundArticle);
+      } else {
+        res.send("There was an issue getting requested article.");
+      }
+    });
+  })
+  .put(function (req, res) {
+    // replace existing article with title "articleTitle" with new "title" and "content"
+    Article.update(
+      { title: req.params.articleTitle },
+      { title: req.body.title, content: req.body.content },
+      { overwrite: true },
+      function (err) {
+        if (!err) {
+          res.send(
+            "Successfully updated " +
+              req.params.articleTitle +
+              " article to " +
+              req.body.title +
+              " article."
+          );
+        } else {
+          res.send(err);
+        }
+      }
+    );
+  })
+  .patch(function (req, res) {
+    Article.update(
+      { title: req.params.articleTitle },
+      { $set: req.body },
+      function (err) {
+        if (!err) {
+          res.send("Successfully updated article."); 
+        } else {
+          res.send(err); 
+        }
+      }
+    );
+  })
+  .delete(function (req, res) {
+    Article.deleteOne({ title: req.params.articleTitle }, function (err) {
+      if (!err) {
+        res.send("Successfully removed one article."); 
+      } else {
+        res.send(err); 
+      }
+    });
   });
-});
 
 app.listen(3000, function () {
   console.log("Server running on port 3000.");
